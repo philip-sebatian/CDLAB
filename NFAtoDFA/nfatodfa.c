@@ -2,7 +2,7 @@
 #include <string.h>
 
 #define MAX 10
-#define ALPHABET 2  // a,b
+#define ALPHABET 2  // a, b
 
 int N; // number of NFA states
 int trans[MAX][ALPHABET][MAX]; // transition table
@@ -22,19 +22,23 @@ int main() {
     printf("Enter number of NFA states: ");
     scanf("%d", &N);
 
-    printf("Enter transitions for 'a':\n");
-    for(int i = 0; i < N; i++)
-        for(int j = 0; j < N; j++)
-            scanf("%d", &trans[i][0][j]);
+    // ✅ Improved user-friendly input
+    printf("\nEnter NFA transitions:\n");
+    for(int i = 0; i < N; i++) {
+        for(int a = 0; a < ALPHABET; a++) {
+            for(int j = 0; j < N; j++) {
+                printf("Is there a transition from q%d to q%d on '%c'? (0/1): ",
+                       i, j, 'a' + a);
+                scanf("%d", &trans[i][a][j]);
+            }
+        }
+    }
 
-    printf("Enter transitions for 'b':\n");
-    for(int i = 0; i < N; i++)
-        for(int j = 0; j < N; j++)
-            scanf("%d", &trans[i][1][j]);
+    memset(visited, 0, sizeof(visited));
 
     int queue[1<<MAX], front = 0, rear = 0;
 
-    int start = 1<<0; // State {0} as start
+    int start = 1<<0; // Start state = {0}
     queue[rear++] = start;
     visited[start] = 1;
 
@@ -46,20 +50,24 @@ int main() {
         print_set(current);
         printf(":\n");
 
-        for(int a = 0; a < ALPHABET; a++) {
-            int next = 0;
-            for(int s = 0; s < N; s++) {
-                if(current & (1<<s)) {
+        // Compute transitions for current DFA state
+        for(int a = 0; a < ALPHABET; a++)
+            dfa[current][a] = 0;
+
+        for(int s = 0; s < N; s++) {
+            if(current & (1<<s)) {
+                for(int a = 0; a < ALPHABET; a++) {
                     for(int t = 0; t < N; t++) {
                         if(trans[s][a][t])
-                            next |= 1<<t;
+                            dfa[current][a] |= (1 << t);
                     }
                 }
             }
+        }
 
-            dfa[current][a] = next;
-
-            printf("  on '%c' -> ", 'a'+a);
+        for(int a = 0; a < ALPHABET; a++) {
+            int next = dfa[current][a];
+            printf("  on '%c' -> ", 'a' + a);
             print_set(next);
             printf("\n");
 
